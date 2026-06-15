@@ -1,0 +1,38 @@
+services:
+  - type: web
+    name: databridge-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free            # or "free" for the web service
+    healthCheckPath: /api/health
+    dockerCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    preDeployCommand: alembic upgrade head   # runs migrations before each deploy
+    envVars:
+      - fromGroup: databridge-secrets
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"
+
+  - type: worker
+    name: databridge-worker
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: starter            # workers cannot use the free plan
+    dockerCommand: celery -A app.workers.celery_app worker --loglevel=info --concurrency=2
+    envVars:
+      - fromGroup: databridge-secrets
+
+envVarGroups:
+  - name: databridge-secrets
+    envVars:
+      - key: DATABASE_URL
+        sync: false          # paste real value in Render dashboard
+      - key: REDIS_URL
+        sync: false
+      - key: ENCRYPTION_KEY
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
