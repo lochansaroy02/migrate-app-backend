@@ -4,7 +4,7 @@ services:
     runtime: docker
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    plan: free            # or "free" for the web service
+    plan: starter            # or "free" for the web service
     healthCheckPath: /api/health
     dockerCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     preDeployCommand: alembic upgrade head   # runs migrations before each deploy
